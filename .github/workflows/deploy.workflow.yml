@@ -1,0 +1,27 @@
+name: deploy-workflow
+on: [push]
+jobs:
+  gh-pages-job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - uses: actions/cache@v2 # [H]
+        with:
+          path: |
+            ${{ github.workspace }}/node_modules
+            ${{ github.workspace }}/webapp/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/yarn-lock.json') }}-${{ hashFiles('**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+      - run: yarn
+      - run: yarn export:gh-pages
+      - run: touch out/.nojekyll
+      - name: Deploy to GitHub pages
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        with:
+          branch: gh-pages
+          folder: out
+          clean: true
